@@ -31,7 +31,7 @@ import android.nfc.tech.NdefFormatable;
 import android.os.Parcelable;
 import android.util.Log;
 
-public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCompleteCallback {
+public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCompleteCallback, LoyaltyCardReader.AccountCallback {
     private static final String REGISTER_MIME_TYPE = "registerMimeType";
     private static final String REMOVE_MIME_TYPE = "removeMimeType";
     private static final String REGISTER_NDEF = "registerNdef";
@@ -442,19 +442,18 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
         getActivity().runOnUiThread(new Runnable() {
             public void run() {
                 Activity activity = getActivity();
-                NfcAdapter nfc = NfcAdapter.getDefaultAdapter(activity);
+                NfcAdapter nfcAdapter = NfcAdapter.getDefaultAdapter(activity);
 
                 if (nfcAdapter != null && !getActivity().isFinishing()) {
                     try {
                         int READER_FLAGS = NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK;
-                        CardReaderFragment fragment = new CardReaderFragment();
-                        /*
+                        LoyaltyCardReader mLoyaltyCardReader = new LoyaltyCardReader(this);
                         nfcAdapter.enableForegroundDispatch(getActivity(), getPendingIntent(), getIntentFilters(), getTechLists());
+                        nfcAdapter.enableReaderMode(activity, mLoyaltyCardReader, READER_FLAGS, null);
 
                         if (p2pMessage != null) {
                             nfcAdapter.setNdefPushMessage(p2pMessage, getActivity());
                         }
-                        */
                     } catch (IllegalStateException e) {
                         // issue 110 - user exits app with home button while nfc is initializing
                         Log.w(TAG, "Illegal State Exception starting NFC. Assuming application is terminating.");
@@ -767,5 +766,25 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
             shareTagCallback.sendPluginResult(result);
         }
 
+    }
+
+    @Override
+    public void onAccountReceived(final String account) {
+        // This callback is run on a background thread, but updates to UI elements must be performed
+        // on the UI thread.
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+              if (handoverCallback != null) {
+                  PluginResult result = new PluginResult(PluginResult.Status.OK, account);
+                  result.setKeepCallback(true);
+                  handoverCallback.sendPluginResult(result);
+              } else if (shareTagCallback != null) {
+                  PluginResult result = new PluginResult(PluginResult.Status.OK, account);
+                  result.setKeepCallback(true);
+                  shareTagCallback.sendPluginResult(result);
+              }
+            }
+        });
     }
 }

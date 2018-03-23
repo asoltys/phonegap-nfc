@@ -734,7 +734,7 @@ function fireNfcTagEvent(eventType, tagAsJson) {
     }, 10);
 }
 
-// textHelper and uriHelper aren't exported, add a property
+// textHelper and uriHelper aren't exported,  a property
 ndef.uriHelper = uriHelper;
 ndef.textHelper = textHelper;
 
