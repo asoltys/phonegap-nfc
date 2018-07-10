@@ -1,18 +1,5 @@
 package com.chariotsolutions.nfc.plugin;
 
-import java.io.IOException;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
-// using wildcard imports so we can support Cordova 3.x
-import org.apache.cordova.*; // Cordova 3.x
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
@@ -30,6 +17,19 @@ import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.os.Parcelable;
 import android.util.Log;
+
+import org.apache.cordova.*;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+// using wildcard imports so we can support Cordova 3.x
 
 public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCompleteCallback, LoyaltyCardReader.AccountCallback {
     private static final String REGISTER_MIME_TYPE = "registerMimeType";
@@ -437,6 +437,7 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
   }
 
     private void startNfc() {
+        LoyaltyCardReader.AccountCallback ac = this;
         createPendingIntent(); // onResume can call startNfc before execute
 
         getActivity().runOnUiThread(new Runnable() {
@@ -447,7 +448,7 @@ public class NfcPlugin extends CordovaPlugin implements NfcAdapter.OnNdefPushCom
                 if (nfcAdapter != null && !getActivity().isFinishing()) {
                     try {
                         int READER_FLAGS = NfcAdapter.FLAG_READER_NFC_A | NfcAdapter.FLAG_READER_SKIP_NDEF_CHECK;
-                        LoyaltyCardReader mLoyaltyCardReader = new LoyaltyCardReader(this);
+                        LoyaltyCardReader mLoyaltyCardReader = new LoyaltyCardReader(ac);
                         nfcAdapter.enableForegroundDispatch(getActivity(), getPendingIntent(), getIntentFilters(), getTechLists());
                         nfcAdapter.enableReaderMode(activity, mLoyaltyCardReader, READER_FLAGS, null);
 
